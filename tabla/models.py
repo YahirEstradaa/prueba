@@ -7,7 +7,7 @@ class Customer(models.Model):
     Email = models.CharField(max_length=100, blank=True)
 
     class Meta:
-        db_table = 'Customers'  
+        db_table = 'Customers'
         managed = False         
 
     def __str__(self):
