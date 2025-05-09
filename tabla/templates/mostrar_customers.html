@@ -12,15 +12,46 @@
     <h1 class="mb-4 text-center">TABLA NUEVA DE CLIENTES</h1>
     <div class="table-responsive">
         <table class="table table-striped table-bordered table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Ubicación</th>
-                    <th>Email</th>
-                </tr>
-            </thead>
-            <tbody>
+<thead class="table-dark">
+    <tr>
+        <th onclick="sortTable(0)" style="cursor:pointer;">ID ▼</th>
+        <th onclick="sortTable(1)" style="cursor:pointer;">Nombre ▲▼</th>
+        <th onclick="sortTable(2)" style="cursor:pointer;">Ubicación ▲▼</th>
+        <th>Email</th>
+    </tr>
+</thead>
+<script>
+let sortDirections = {};
+
+function sortTable(columnIndex) {
+    const table = document.querySelector("table");
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+
+    // Alternar entre ascendente y descendente
+    sortDirections[columnIndex] = !sortDirections[columnIndex];
+    const direction = sortDirections[columnIndex] ? 1 : -1;
+
+    rows.sort((a, b) => {
+        const textA = a.children[columnIndex].textContent.trim().toUpperCase();
+        const textB = b.children[columnIndex].textContent.trim().toUpperCase();
+
+        // Si la columna es ID (index 0), ordenar como número
+        if (columnIndex === 0) {
+            return (parseInt(textA) - parseInt(textB)) * direction;
+        }
+
+        // Ordenar como texto
+        return textA.localeCompare(textB) * direction;
+    });
+
+    // Reorganiza las filas en el DOM
+    rows.forEach(row => tbody.appendChild(row));
+}
+</script>
+
+
+            <tbody id="customer-body">
                 {% for customer in customers %}
                 <tr>
                     <td>{{ customer.CustomerId }}</td>
@@ -33,12 +64,74 @@
                     <td colspan="4" class="text-center">No hay clientes registrados.</td>
                 </tr>
                 {% endfor %}
+                <script>
+const rowsPerPage = 10;
+let currentPage = 1;
+
+function paginate() {
+    const rows = document.querySelectorAll("#customer-body tr");
+    const totalRows = rows.length;
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+    // Oculta todas las filas
+    rows.forEach((row, index) => {
+        row.style.display = (index >= (currentPage - 1) * rowsPerPage && index < currentPage * rowsPerPage) ? "" : "none";
+    });
+
+    renderPaginationControls(totalPages);
+}
+
+function renderPaginationControls(totalPages) {
+    const container = document.getElementById("pagination");
+    container.innerHTML = "";
+
+    // Botón "Anterior"
+    if (currentPage > 1) {
+        const prev = createPageButton("«", () => {
+            currentPage--;
+            paginate();
+        });
+        container.appendChild(prev);
+    }
+
+    // Botones numerados
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = createPageButton(i, () => {
+            currentPage = i;
+            paginate();
+        });
+        if (i === currentPage) btn.classList.add("btn-primary");
+        container.appendChild(btn);
+    }
+
+    // Botón "Siguiente"
+    if (currentPage < totalPages) {
+        const next = createPageButton("»", () => {
+            currentPage++;
+            paginate();
+        });
+        container.appendChild(next);
+    }
+}
+
+function createPageButton(label, onClick) {
+    const btn = document.createElement("button");
+    btn.className = "btn btn-sm btn-outline-secondary m-1";
+    btn.textContent = label;
+    btn.onclick = onClick;
+    return btn;
+}
+
+// Ejecutar al cargar
+window.addEventListener("DOMContentLoaded", paginate);
+</script>
+
             </tbody>
         </table>
+        <div id="pagination" class="text-center mt-3"></div>
     </div>
 </div>
 
-<!-- Optional Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
